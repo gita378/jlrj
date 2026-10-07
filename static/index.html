@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>离线计量台账</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header><div><h1>离线计量台账</h1><small>设备 · 证书 · 到期 · 对账</small></div><label>操作人 <input id="operator" placeholder="姓名或工号" autocomplete="off"></label></header>
+  <nav><button data-tab="dashboard" class="active">概览</button><button data-tab="equipment">设备台账</button><button data-tab="certificates">证书</button><button data-tab="billing">对账</button><button data-tab="audit">审计与备份</button></nav>
+  <main>
+    <p id="notice" role="status"></p>
+    <section id="dashboard" class="pane active"><h2>概览</h2><div id="cards" class="cards"></div><h3>下月到期计划</h3><div id="plan"></div><h3>异常与超期</h3><div id="abnormal"></div></section>
+    <section id="equipment" class="pane"><div class="heading"><h2>设备台账</h2><a href="/api/export/equipment">导出台账 Excel</a></div><div class="grid"><form id="equipment-form"><h3 id="equipment-title">新建设备</h3><input type="hidden" name="id"><div class="fields"><label>资产编号 *<input name="asset_code" required></label><label>设备名称 *<input name="name" required></label><label>型号<input name="model"></label><label>出厂编号<input name="serial_no"></label><label>生产厂家<input name="manufacturer"></label><label>ABC 分类<select name="category"><option>A</option><option>B</option><option selected>C</option></select></label><label>使用部门<input name="department"></label><label>存放地点<input name="location"></label><label>检定周期（月）<input name="calibration_cycle" type="number" min="1" max="120" value="12"></label><label>使用状态<select name="stopped"><option value="0">使用中</option><option value="1">停用</option></select></label><label>异常标记<select name="abnormal_flag"><option value="">无</option><option>计量不过</option><option>异常未检</option><option>其他</option></select></label><label>异常备注<input name="abnormal_note"></label></div><div class="actions"><button type="submit">保存设备</button><button type="button" id="reset-equipment" class="secondary">清空表单</button></div></form><div class="importbox"><h3>批量导入</h3><p>接受 .xlsx 或 UTF-8 CSV。表头至少包含“资产编号”和“设备名称”，已有编号会更新。</p><input id="equipment-file" type="file" accept=".xlsx,.csv"><button id="import-equipment">导入台账</button><pre id="equipment-import-result"></pre></div></div><div class="heading"><h3>设备列表</h3><input id="equipment-search" placeholder="搜索资产编号或名称"></div><div id="equipment-list"></div></section>
+    <section id="certificates" class="pane"><h2>证书归集</h2><div class="grid"><div class="importbox"><h3>上传 PDF</h3><p>自动提取字段并去重。请打开原件核对后确认；扫描件可人工填入字段。</p><input id="certificate-file" type="file" accept=".pdf"><button id="upload-certificate">上传证书</button></div><form id="review-form"><h3>审核证书 <span id="review-id"></span></h3><input type="hidden" name="id"><div class="fields"><label>设备 ID *<input name="equipment_id" type="number" required></label><label>证书编号 *<input name="cert_no" required></label><label>校准机构<input name="cal_org"></label><label>校准日期 *<input name="cal_date" type="date" required></label><label>有效期至<input name="valid_until" type="date"></label><label>结论 *<select name="result"><option value="">请选择</option><option>合格</option><option>不合格</option></select></label><label>本次服务约定金额<input name="agreed_amount" type="number" min="0" step="0.01"></label><label>审核备注<input name="review_note"></label></div><div class="actions"><button type="submit">确认并更新台账</button><button type="button" id="reject-certificate" class="danger">驳回</button></div></form></div><h3>证书列表</h3><div id="certificate-list"></div></section>
+    <section id="billing" class="pane"><h2>结账清单核对</h2><p>接受 .xlsx 或 UTF-8 CSV；表头使用“资产编号”“证书编号”“金额”。每行原样留存。只有精确对应证书且录入了约定金额，才能自动判断金额差异。</p><input id="billing-file" type="file" accept=".xlsx,.csv"><button id="import-billing">导入并核对</button><a href="/api/export/billing">导出差异 Excel</a><pre id="billing-import-result"></pre><div id="billing-list"></div></section>
+    <section id="audit" class="pane"><div class="heading"><h2>审计与备份</h2><div><a href="/api/export/audit">导出审计 Excel</a><a href="/api/backup">下载完整备份 ZIP</a></div></div><p>备份包含 SQLite 数据库与所有已上传 PDF。请妥善保管下载文件。</p><div id="audit-list"></div></section>
+  </main>
+</body>
+</html>
