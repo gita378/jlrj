@@ -2,7 +2,7 @@
 
 | 项目 | 复用位置 | 许可与取舍 |
 | --- | --- | --- |
-| [pypdf](https://github.com/py-pdf/pypdf) | `server.py` 直接调用 `PdfReader` 提取文本、尝试空密码解密 | BSD-3-Clause；扫描证书仍须人工录入。 |
+| [pypdf](https://github.com/py-pdf/pypdf) | `server.py` 直接调用 `PdfReader` 提取文本、尝试空密码解密 | BSD-3-Clause；本项目只处理可提取文本的 PDF。 |
 | [openpyxl](https://openpyxl.readthedocs.io/) | `server.py` 直接调用 `load_workbook`、`Workbook` 读写台账与清单 | MIT；原始资产编号按文本处理。 |
 | [MSL Equipment](https://github.com/MSLNZ/msl-equipment) | 借鉴设备登记与校准记录分离 | MIT；未复制源文件，也不引入仪器驱动。 |
 | [InvenTree](https://github.com/inventree/InvenTree) | 借鉴台账、附件和可追溯记录的产品结构 | MIT；库存/采购子系统不适合本项目，未复制源文件。 |
