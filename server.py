@@ -7,6 +7,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 import re
 import sqlite3
 import threading
@@ -27,7 +28,8 @@ from pypdf import PdfReader
 
 
 ROOT = Path(__file__).resolve().parent
-DATA = ROOT / "data"
+DATA = (Path(os.environ.get("LOCALAPPDATA", Path.home())) / "CNAS计量台账"
+        if getattr(sys, "frozen", False) else ROOT / "data")
 PDF_DIR = DATA / "certificates"
 DB_FILE = DATA / "register.sqlite3"
 MAX_UPLOAD = 15 * 1024 * 1024

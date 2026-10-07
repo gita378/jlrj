@@ -3,6 +3,13 @@ wheelhouse/
 __pycache__/
 *.pyc
 .venv/
+.venv-build/
+.build_tools/
+.build_temp/
+.tmp/
+.exe-smoke-data/
+build/
+dist/
 .env
 .env.*
 !.env.example

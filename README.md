@@ -1,39 +1,31 @@
-# 离线计量台账
+# 计量设备管理（Windows 桌面版）
 
-单机运行的设备计量管理系统。以原始证书和校准记录为依据，生成设备当前状态；无法可靠解析的证书进入待确认队列。
+本地离线运行的设备计量管理软件。主程序是原生 Windows EXE，界面按设备台账、送检、证书、结账对账、审计备份组织，业务数据保存在本机 SQLite。无需浏览器、服务端或网络。
 
-## 启动
+## 直接使用
 
-在已安装 Python 3.11+、`pypdf` 和 `openpyxl` 的 Windows 电脑上运行：
+解压 `dist/计量设备管理-免安装版.zip`，保持 `计量设备管理.exe` 和 `_internal` 文件夹在同一目录，双击 EXE。整个文件夹可以复制到另一台 Windows 电脑；目标电脑无需安装 Python。首次运行自动创建数据库，数据存于 `%LOCALAPPDATA%\CNAS计量台账`，不会因移动或更新 EXE 消失。
 
-```bat
-python server.py
-```
+当前交付的目录版已在 Windows 10 本机实际启动验证。`dist/计量设备管理.exe` 是另外构建的单文件包；在本开发环境中其自解压启动未完成，因此建议使用上述免安装目录版。
 
-浏览器打开 `http://127.0.0.1:8765`。只监听本机，不访问云服务。数据保存在 `data/`，首次运行自动建库。用 `python -m unittest discover -s tests -v` 验证核心流程。
-
-若需安装依赖，请在**有网络的同平台电脑**执行 `python -m pip download -r requirements.txt -d wheelhouse`，将项目和 `wheelhouse/` 拷贝到目标机，再执行 `python -m pip install --no-index --find-links wheelhouse -r requirements.txt`。将来可以制作同平台、同 Python 版本的离线安装包；当前仓库未宣称已验证目标云电脑环境。
+有 Python 3.11+ 的开发电脑也可运行 `start-local.cmd` 或 `python desktop.py`。安装依赖：`python -m pip install -r requirements.txt`。旧的本地浏览器界面仍可通过 `python server.py` 打开，用于开发排查。
 
 ## 工作流程
 
-1. 创建设备，或上传 Excel 台账。资产编号按文本保存，保留前导零。设备可归档，历史证书与审计仍保留。
-2. 记录送检日期；返回后登记返回日期。看板的送检统计取自实际送检记录。
-3. 批量导入可提取文本的 PDF。系统计算 SHA-256 去重并提取字段；设备编号精确匹配且证书编号、日期、结论明确时自动确认并回写台账。字段冲突或缺失时进入待确认，原始 PDF 保留。
-4. 对待确认的证书核对并更正字段。确认后的校准记录保留历史；最新有效记录计算台账日期，不允许旧证书覆盖较新记录。
-5. 对异常设备手动标记及解除，并写明原因。异常优先于自动到期判定。最新证书不合格时也显示异常，新证书合格后按新结果重新判定。
-6. 导入结账清单（Excel/CSV）。只有设备、证书编号可精确匹配时才自动核对；金额需有该项的约定金额才会比较。填写核对月份后，还会找出当月证书中未列入清单的记录。
-7. 查看看板、导出审计记录、下载完整备份 ZIP（数据库与证书）。
+1. 在“设备台账”创建设备，或导入 Excel/CSV。资产编号按文本保存，支持搜索、编辑、归档和导出。
+2. 在“送检记录”登记送检与返回日期；总览分别统计本月送检和校准。
+3. 在“计量证书”批量导入可提取文本的 PDF。软件按哈希去重，提取设备编号、证书号、日期、结论等；字段完整、唯一精确匹配时自动确认并更新设备状态，有疑点则进入待确认。可以打开原件核对、更正。
+4. 在“结账对账”导入 Excel/CSV 清单，核查重复项、证书/设备不匹配、金额差异与当月证书漏列。金额比较需要证书记录中有约定金额。
+5. 在“审计与备份”导出日志和完整备份 ZIP，也可在软件内恢复。恢复前会自动保存现有数据的恢复包。
 
-恢复备份：先关闭服务，执行 `python restore.py calibration-backup.zip`。程序先检验 SQLite 和证书哈希，原有数据另存为 `data/pre-restore-*.zip`，再恢复数据库与 PDF。
+只处理可复制文本的 PDF，不做扫描/OCR。不同机构的证书模板可能需要人工确认。当前操作人是手动填写的记录字段，尚无多用户身份认证；适合单机本地使用。
 
-## 边界
+## 构建与验证
 
-- 仅处理可提取文本的 PDF，不包含 OCR。
-- 自动提取依赖证书字段标签及文本布局。自动确认只在字段完整、设备编号唯一且精确匹配时发生；不同机构的模板仍需在有样例后逐个校验。
-- “本月校准”依据校准日期，“本月送检”依据实际登记的送检日期，二者分别统计。
-- 默认只允许本机访问；操作人由用户在页面填写，单机环境下不构成身份认证。
-- 当前为可运行的本地版本，尚无用户权限模块。上线到多人共用云电脑前需先补身份认证与权限控制。
+源码测试：`python -m unittest discover -s tests -v`；桌面页面巡检：`python smoke_desktop.py`。构建依赖 PyInstaller 的 wheel：`python -m pip download pyinstaller -d wheelhouse`，再运行 `python build_exe.py --onedir`。构建程序把 wheel 解到本地临时目录，不向系统安装打包工具。构建时需要已安装 `requirements.txt` 的 Python，并在 Windows 上执行。运行 `python smoke_desktop.py --exe --onedir` 验证目录版 EXE 的启动与建库。
 
-## 开源复用
+核心业务测试覆盖 Excel 导入、PDF 解析和自动回写、旧证书保护、异常、送检、对账及备份。未获得真实机构证书和结账清单样本，所以具体模板的字段提取准确率仍需用实际文件验证。
 
-直接调用了 [pypdf](https://github.com/py-pdf/pypdf) 的 PDF 解析 API 和 [openpyxl](https://openpyxl.readthedocs.io/) 的 Excel 读写 API。设备历史与状态分离的设计参考 [MSL Equipment](https://github.com/MSLNZ/msl-equipment) 的设备登记与校准记录思路；可扩展台账界面参考 [InvenTree](https://github.com/inventree/InvenTree)。当前未复制这两个项目的源文件。详细选择见 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
+## 开源借鉴
+
+直接使用 [pypdf](https://github.com/py-pdf/pypdf) 解析 PDF、[openpyxl](https://openpyxl.readthedocs.io/) 读写 Excel，并以 [PyInstaller](https://pyinstaller.org/) 构建 EXE。设备主档与校准历史分离的设计参考 [MSL Equipment](https://github.com/MSLNZ/msl-equipment)，台账模块与工作流布局参考 [InvenTree](https://github.com/inventree/InvenTree)。没有复制这两个项目的源文件。取舍见 [docs/OPEN_SOURCE.md](docs/OPEN_SOURCE.md)。
